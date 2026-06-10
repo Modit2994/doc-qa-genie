@@ -1,0 +1,23 @@
+# Core UI
+streamlit>=1.35.0
+
+# PDF parsing
+PyMuPDF>=1.24.0
+
+# Word document parsing
+python-docx>=1.1.0
+
+# Embeddings (open source, runs locally)
+sentence-transformers>=3.0.0
+
+# Vector store (local, no server required)
+chromadb>=0.5.0
+
+# Ollama Python client (local mode)
+ollama>=0.2.0
+
+# Groq API client (API mode)
+groq>=1.4.0
+
+# .env file support for API key storage
+python-dotenv>=1.0.0
