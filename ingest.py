@@ -11,10 +11,12 @@ import io
 import os
 from pathlib import Path
 
-# Force HuggingFace libraries to use local cache only.
-# Prevents httpx.ProxyError (403) on corporate/restricted networks.
-os.environ.setdefault("HF_HUB_OFFLINE", "1")
-os.environ.setdefault("TRANSFORMERS_OFFLINE", "1")
+# On corporate/restricted networks the HF hub causes proxy errors.
+# Only force offline mode when NOT running on Streamlit Cloud.
+_on_streamlit_cloud = os.environ.get("HOME", "").startswith("/home/adminuser")
+if not _on_streamlit_cloud:
+    os.environ.setdefault("HF_HUB_OFFLINE", "1")
+    os.environ.setdefault("TRANSFORMERS_OFFLINE", "1")
 from typing import Optional
 
 import chromadb
