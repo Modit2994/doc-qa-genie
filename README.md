@@ -18,7 +18,7 @@ Get instant, accurate answers with page-level source citations.
 
 ## Two Ways to Use It — Pick What Works for You
 
-| | Option A: Groq API ☁️ | Option B: Local (Ollama) 🔒 |
+| | Option A: Groq API ☁️ | Option B: Local (phi3) 🔒 |
 |---|---|---|
 | **Setup time** | ~2 minutes | ~15 minutes + model download |
 | **Internet needed** | Yes (only for the answer, not your file) | No — fully offline |
