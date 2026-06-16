@@ -122,6 +122,7 @@ def _parse_docx(file_bytes: bytes) -> list[tuple[int, str]]:
 def ingest_document(
     file_bytes: bytes,
     filename: str,
+    reset: bool = True,
 ) -> dict:
     """
     Parse → chunk → embed → store in ChromaDB.
@@ -140,19 +141,20 @@ def ingest_document(
     if not pages:
         raise ValueError("No text could be extracted from the document.")
 
-    # Chunk
-    chunks: list[Chunk] = chunk_document(pages, source_file=filename)
+    # Embed (needed both for semantic chunking and for vector storage)
+    embedder = get_embedder()
+
+    # Chunk — passes embedder so semantic strategy can be attempted
+    chunks, strategy = chunk_document(pages, source_file=filename, embedder=embedder)
 
     if not chunks:
         raise ValueError("Document produced no chunks after processing.")
 
-    # Embed
-    embedder = get_embedder()
     texts = [c.text for c in chunks]
     embeddings = embedder.encode(texts, show_progress_bar=False).tolist()
 
-    # Store — reset collection so each upload is a fresh context
-    collection = get_collection(reset=True)
+    # Reset collection on the first file; append for subsequent files
+    collection = get_collection(reset=reset)
 
     ids = [f"chunk_{i}" for i in range(len(chunks))]
     metadatas = [
@@ -171,10 +173,6 @@ def ingest_document(
         documents=texts,
         metadatas=metadatas,
     )
-
-    # Determine which strategy was used
-    has_sections = any(c.section for c in chunks)
-    strategy = "semantic (heading-based)" if has_sections else "fixed (1000 words, 10% overlap)"
 
     return {
         "filename": filename,

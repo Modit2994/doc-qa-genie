@@ -43,7 +43,7 @@ st.set_page_config(
 
 defaults = {
     "chat_history": [],
-    "doc_meta": None,
+    "docs_meta": [],
     "llm_mode": MODE_LOCAL,
     "selected_model": OLLAMA_DEFAULT_MODEL,
     "groq_api_key": os.environ.get("GROQ_API_KEY", ""),
@@ -64,34 +64,61 @@ with st.sidebar:
     st.divider()
 
     # ── 1. Upload ──────────────────────────────────────────────────────────
-    st.subheader("1. Upload Document")
-    uploaded_file = st.file_uploader(
-        label="PDF or Word file (max 2 MB)",
+    st.subheader("1. Upload Documents")
+    uploaded_files = st.file_uploader(
+        label="PDF or Word files — up to 3 files, max 2 MB each",
         type=["pdf", "docx"],
-        help="Supported: .pdf, .docx  |  Max size: 2 MB",
+        accept_multiple_files=True,
+        help="Supported: .pdf, .docx  |  Max size: 2 MB each  |  Max 3 files",
     )
 
-    if uploaded_file is not None:
-        file_bytes = uploaded_file.read()
-        if len(file_bytes) > MAX_FILE_BYTES:
-            st.error(
-                f"File too large ({len(file_bytes) / 1024 / 1024:.1f} MB). "
-                "Please upload a file smaller than 2 MB."
-            )
+    if uploaded_files:
+        if len(uploaded_files) > 3:
+            st.error("Please upload a maximum of 3 files at a time.")
         else:
-            with st.spinner("Processing document…"):
-                try:
-                    meta = ingest_document(file_bytes, uploaded_file.name)
-                    st.session_state.doc_meta = meta
-                    st.session_state.chat_history = []
+            # Only re-ingest when the set of filenames changes
+            current_names = [f.name for f in uploaded_files]
+            cached_names = [m["filename"] for m in st.session_state.docs_meta]
+            if current_names != cached_names:
+                st.session_state.docs_meta = []
+                st.session_state.chat_history = []
+                all_ok = True
+                for i, uf in enumerate(uploaded_files):
+                    file_bytes = uf.read()
+                    if len(file_bytes) > MAX_FILE_BYTES:
+                        st.error(
+                            f"**{uf.name}** is too large "
+                            f"({len(file_bytes) / 1024 / 1024:.1f} MB). Max 2 MB."
+                        )
+                        all_ok = False
+                        break
+                    with st.spinner(f"Processing {uf.name}… ({i + 1}/{len(uploaded_files)})"):
+                        try:
+                            meta = ingest_document(
+                                file_bytes, uf.name, reset=(i == 0)
+                            )
+                            st.session_state.docs_meta.append(meta)
+                        except ValueError as e:
+                            st.error(f"**{uf.name}**: {e}")
+                            all_ok = False
+                            break
+
+                if all_ok and st.session_state.docs_meta:
+                    total_chunks = sum(m["chunk_count"] for m in st.session_state.docs_meta)
+                    for meta in st.session_state.docs_meta:
+                        st.success(
+                            f"✅ **{meta['filename']}**\n\n"
+                            f"- Pages: {meta['total_pages']}\n"
+                            f"- Chunks: {meta['chunk_count']}\n"
+                            f"- Strategy: {meta['strategy']}"
+                        )
+                    if len(st.session_state.docs_meta) > 1:
+                        st.info(f"🔍 Deep check active — {total_chunks} total chunks across {len(st.session_state.docs_meta)} documents.")
+            else:
+                for meta in st.session_state.docs_meta:
                     st.success(
-                        f"✅ **{meta['filename']}**\n\n"
-                        f"- Pages: {meta['total_pages']}\n"
-                        f"- Chunks: {meta['chunk_count']}\n"
-                        f"- Strategy: {meta['strategy']}"
+                        f"✅ **{meta['filename']}** — {meta['chunk_count']} chunks"
                     )
-                except ValueError as e:
-                    st.error(str(e))
 
     st.divider()
 
@@ -230,13 +257,14 @@ Paste the key into the **Groq API Key** field in the sidebar on the left.
             """
         )
 
-if st.session_state.doc_meta is None:
-    st.info("👈 Upload a PDF or Word document from the sidebar to get started.")
+if not st.session_state.docs_meta:
+    st.info("👈 Upload up to 3 PDF or Word documents from the sidebar to get started.")
     st.stop()
 
-meta = st.session_state.doc_meta
+docs_meta = st.session_state.docs_meta
+total_chunks = sum(m["chunk_count"] for m in docs_meta)
 
-# Active doc + mode badge
+# Active docs + mode badge
 if st.session_state.llm_mode == MODE_LOCAL:
     mode_label = f"🔒 Local · `{st.session_state.selected_model}`"
     privacy_note = ""
@@ -244,9 +272,13 @@ else:
     mode_label = f"☁️ Groq · `{st.session_state.groq_model}`"
     privacy_note = "  |  ⚠️ Matched chunks sent to Groq"
 
-st.caption(
-    f"📁 **{meta['filename']}** — {meta['chunk_count']} chunks  |  {mode_label}{privacy_note}"
-)
+if len(docs_meta) == 1:
+    doc_label = f"📁 **{docs_meta[0]['filename']}** — {total_chunks} chunks"
+else:
+    names = ", ".join(f"**{m['filename']}**" for m in docs_meta)
+    doc_label = f"📂 {names} — {total_chunks} chunks across {len(docs_meta)} docs"
+
+st.caption(f"{doc_label}  |  {mode_label}{privacy_note}")
 
 st.divider()
 

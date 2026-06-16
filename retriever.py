@@ -73,13 +73,16 @@ def build_context(chunks: list[RetrievedChunk]) -> str:
 def build_prompt(query: str, context: str) -> str:
     """
     Construct the final prompt sent to the LLM.
-    Instructs the model to answer only from the provided context
-    and cite sources.
+    Instructs the model to answer only from the provided context,
+    avoid low-confidence guesses, and always cite sources.
     """
-    return f"""You are a helpful assistant that answers questions strictly based on the document provided.
+    return f"""Check the document context below and provide the most relevant answer to the user's question.
 
-If the answer is not found in the context below, say "I could not find this information in the document."
-Always mention the page number or section when citing information.
+Rules you MUST follow:
+1. Answer ONLY using the document context provided — do NOT use outside knowledge.
+2. If you are not confident or the answer is not clearly present, respond with exactly: "I was unable to find a clear answer for this in the document." — do NOT give a low-confidence or speculative answer.
+3. ALWAYS cite the source at the end of your answer in the format: [Page X] or [Page X — Section: Y].
+4. Be concise and direct. Do not pad the answer.
 
 --- DOCUMENT CONTEXT ---
 {context}

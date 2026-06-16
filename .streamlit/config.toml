@@ -1,0 +1,9 @@
+[browser]
+gatherUsageStats = false
+
+[logger]
+level = "error"
+
+[server]
+# Keep the embedding model fully offline — avoids corporate proxy 403 errors
+enableCORS = false

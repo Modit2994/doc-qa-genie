@@ -17,7 +17,10 @@ chromadb>=0.5.0
 ollama>=0.2.0
 
 # Groq API client (API mode)
-groq>=1.4.0
+groq>=0.9.0
+
+# HTTP client (used explicitly for corporate proxy/SSL handling)
+httpx>=0.24.0
 
 # .env file support for API key storage
 python-dotenv>=1.0.0

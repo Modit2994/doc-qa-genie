@@ -44,10 +44,11 @@ OLLAMA_SUGGESTED_MODELS = [
 GROQ_DEFAULT_MODEL = "llama-3.1-8b-instant"
 
 GROQ_MODELS = [
-    "llama-3.1-8b-instant",     # fast, free, great for Q&A
-    "llama-3.3-70b-versatile",  # higher quality, still free tier
-    "mixtral-8x7b-32768",       # large context window
-    "gemma2-9b-it",             # Google Gemma 2
+    "llama-3.1-8b-instant",        # fast, free, great for Q&A
+    "llama-3.3-70b-versatile",     # higher quality, still free tier
+    "llama3-8b-8192",              # Llama 3 8B
+    "llama3-70b-8192",             # Llama 3 70B
+    "gemma2-9b-it",                # Google Gemma 2
 ]
 
 
@@ -69,7 +70,7 @@ def list_ollama_models() -> list[str]:
 def stream_ollama(prompt: str, model: str = OLLAMA_DEFAULT_MODEL) -> Generator[str, None, None]:
     try:
         import ollama
-        for chunk in ollama.generate(model=model, prompt=prompt, stream=True):
+        for chunk in ollama.generate(model=model, prompt=prompt, stream=True, options={"temperature": 0.4}):
             token = chunk.get("response", "")
             if token:
                 yield token
@@ -113,7 +114,21 @@ def stream_groq(
 
         stream = client.chat.completions.create(
             model=model,
-            messages=[{"role": "user", "content": prompt}],
+            messages=[
+                {
+                    "role": "system",
+                    "content": (
+                        "You are a strict document Q&A assistant. "
+                        "You MUST answer ONLY using the document context provided by the user. "
+                        "Do NOT use any external knowledge, training data, or assumptions. "
+                        "If the answer is not explicitly found in the provided context, "
+                        "respond with exactly: 'I could not find this information in the document.' "
+                        "Always cite the page number or section when answering."
+                    ),
+                },
+                {"role": "user", "content": prompt},
+            ],
+            temperature=0.4,
             stream=True,
         )
         for chunk in stream:

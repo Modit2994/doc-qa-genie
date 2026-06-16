@@ -9,9 +9,9 @@ Get instant, accurate answers with page-level source citations.
 
 ## What Does This App Do?
 
-- Upload any PDF or `.docx` file (up to 2 MB)
+- Upload **up to 3** PDF or `.docx` files at once (max 2 MB each) for deep cross-document Q&A
 - Type a question like *"What are the payment terms?"* or *"Summarise section 3"*
-- Get a streamed answer with the exact page and section it came from
+- Get a streamed answer with the exact page and section it came from, citing which document
 - Ask follow-up questions — the app remembers the conversation
 
 ---
@@ -160,11 +160,11 @@ You will see something like:
 
 ```
 doc-qa/
-├── app.py              # Main UI — upload, chat, streaming responses
-├── ingest.py           # Reads document → splits into chunks → stores locally
+├── app.py              # Main UI — upload (up to 3 files), chat, streaming responses
+├── ingest.py           # Reads documents → chunks → embeds → stores locally
 ├── retriever.py        # Finds the most relevant chunks for your question
 ├── llm.py              # Sends question to Ollama or Groq and streams the answer
-├── chunker.py          # Smart document splitting logic
+├── chunker.py          # Three-tier chunking: heading-based / semantic / fixed
 ├── init.py             # One-time setup script
 ├── requirements.txt    # Python dependencies
 ├── .env.example        # Template for saving your Groq API key
@@ -175,10 +175,15 @@ doc-qa/
 
 ## How Chunking Works (Plain English)
 
-When you upload a document, the app splits it into small pieces before searching:
+When you upload a document, the app automatically picks the best splitting strategy:
 
-- **If the document has clear headings** (like a report or spec) → splits by section
-- **If it's unstructured** (like a scan or plain text) → splits every ~1000 words with 10% overlap
+| Priority | Strategy | Used when |
+|---|---|---|
+| **1 — Heading-based** | Splits by detected section headings | Document has 3+ clear headings |
+| **2 — Semantic** | Groups sentences by meaning using AI embeddings; cuts where topic changes | No clear headings but text has paragraph structure |
+| **3 — Fixed fallback** | 1000-word windows with 15% overlap | Unstructured / scan-like documents |
+
+The sidebar shows which strategy was picked for your file. Oversized chunks are always further split automatically.
 
 This means the app searches *relevant sections* rather than the whole document — making answers faster and more precise.
 
@@ -197,8 +202,8 @@ This means the app searches *relevant sections* rather than the whole document �
 
 ## Limitations
 
-- One document at a time (uploading a new file replaces the previous one)
-- Maximum 2 MB file size
+- Maximum **3 files** per session (uploading a new set replaces the previous one)
+- Maximum **2 MB per file**
 - Text only — images and tables within documents are not extracted
 - `.pdf` and `.docx` formats only
 
