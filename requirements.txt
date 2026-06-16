@@ -11,7 +11,9 @@ python-docx>=1.1.0
 sentence-transformers>=3.0.0
 
 # Vector store (local, no server required)
-chromadb>=0.5.0
+# Pinned to avoid protobuf/OpenTelemetry breakage on Python 3.14+
+chromadb>=0.5.0,<0.6.0
+protobuf>=4.25.0,<5.0.0
 
 # Ollama Python client (local mode)
 ollama>=0.2.0
