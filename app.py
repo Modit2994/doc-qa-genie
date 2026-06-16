@@ -11,7 +11,7 @@ import os
 import streamlit as st
 from dotenv import load_dotenv
 
-from ingest import MAX_FILE_BYTES, ingest_document
+from ingest import MAX_FILE_BYTES, ingest_document, get_embedder
 from llm import (
     GROQ_DEFAULT_MODEL,
     GROQ_MODELS,
@@ -29,6 +29,13 @@ load_dotenv()
 # ---------------------------------------------------------------------------
 # Page configuration
 # ---------------------------------------------------------------------------
+
+@st.cache_resource(show_spinner="Loading embedding model (first run only)…")
+def _load_embedder():
+    return get_embedder()
+
+# Trigger model load at startup so the first upload isn't slow
+_load_embedder()
 
 st.set_page_config(
     page_title="Doc Q&A",

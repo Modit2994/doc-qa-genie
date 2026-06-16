@@ -11,12 +11,10 @@ import io
 import os
 from pathlib import Path
 
-# On corporate/restricted networks the HF hub causes proxy errors.
-# Only force offline mode when NOT running on Streamlit Cloud.
-_on_streamlit_cloud = os.environ.get("HOME", "").startswith("/home/adminuser")
-if not _on_streamlit_cloud:
-    os.environ.setdefault("HF_HUB_OFFLINE", "1")
-    os.environ.setdefault("TRANSFORMERS_OFFLINE", "1")
+# Remove any offline flags so the model can be downloaded when not cached.
+# Corporate users who need offline mode should set HF_HUB_OFFLINE in their .env.
+for _key in ("HF_HUB_OFFLINE", "TRANSFORMERS_OFFLINE"):
+    os.environ.pop(_key, None)
 from typing import Optional
 
 import chromadb
@@ -46,12 +44,8 @@ _chroma_client: Optional[chromadb.PersistentClient] = None
 def get_embedder() -> SentenceTransformer:
     global _embedder
     if _embedder is None:
-        try:
-            # Use locally cached model first — avoids proxy/firewall issues
-            _embedder = SentenceTransformer(EMBEDDING_MODEL, local_files_only=True)
-        except Exception:
-            # Fallback: allow network if cache is missing (first-time setup)
-            _embedder = SentenceTransformer(EMBEDDING_MODEL, local_files_only=False)
+        # SentenceTransformer uses local cache when available, downloads otherwise
+        _embedder = SentenceTransformer(EMBEDDING_MODEL)
     return _embedder
 
 
