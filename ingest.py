@@ -2,7 +2,7 @@
 ingest.py — Document parsing, chunking, embedding, and ChromaDB storage.
 
 Supported formats : PDF (.pdf), Word (.docx)
-Max file size     : 2 MB (enforced by caller in app.py)
+Max file size     : 25 MB (enforced by caller in app.py)
 """
 
 from __future__ import annotations
@@ -31,7 +31,7 @@ from chunker import Chunk, chunk_document
 CHROMA_DIR = Path(__file__).parent / ".chroma"
 COLLECTION_NAME = "doc_qa"
 EMBEDDING_MODEL = "BAAI/bge-small-en-v1.5"
-MAX_FILE_BYTES = 2 * 1024 * 1024  # 2 MB
+MAX_FILE_BYTES = 25 * 1024 * 1024  # 25 MB
 
 # ---------------------------------------------------------------------------
 # Singleton helpers — model and chroma client are loaded once per session

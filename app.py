@@ -73,10 +73,10 @@ with st.sidebar:
     # ── 1. Upload ──────────────────────────────────────────────────────────
     st.subheader("1. Upload Documents")
     uploaded_files = st.file_uploader(
-        label="PDF or Word files — up to 3 files, max 2 MB each",
+        label="PDF or Word files — up to 3 files, max 25 MB each",
         type=["pdf", "docx"],
         accept_multiple_files=True,
-        help="Supported: .pdf, .docx  |  Max size: 2 MB each  |  Max 3 files",
+        help="Supported: .pdf, .docx  |  Max size: 25 MB each  |  Max 3 files",
     )
 
     if uploaded_files:
@@ -95,7 +95,7 @@ with st.sidebar:
                     if len(file_bytes) > MAX_FILE_BYTES:
                         st.error(
                             f"**{uf.name}** is too large "
-                            f"({len(file_bytes) / 1024 / 1024:.1f} MB). Max 2 MB."
+                            f"({len(file_bytes) / 1024 / 1024:.1f} MB). Max 25 MB."
                         )
                         all_ok = False
                         break

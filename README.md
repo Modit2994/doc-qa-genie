@@ -9,7 +9,7 @@ Get instant, accurate answers with page-level source citations.
 
 ## What Does This App Do?
 
-- Upload **up to 3** PDF or `.docx` files at once (max 2 MB each) for deep cross-document Q&A
+- Upload **up to 3** PDF or `.docx` files at once (max 25 MB each) for deep cross-document Q&A
 - Type a question like *"What are the payment terms?"* or *"Summarise section 3"*
 - Get a streamed answer with the exact page and section it came from, citing which document
 - Ask follow-up questions — the app remembers the conversation
@@ -203,7 +203,7 @@ This means the app searches *relevant sections* rather than the whole document �
 ## Limitations
 
 - Maximum **3 files** per session (uploading a new set replaces the previous one)
-- Maximum **2 MB per file**
+- Maximum **25 MB per file**
 - Text only — images and tables within documents are not extracted
 - `.pdf` and `.docx` formats only
 
